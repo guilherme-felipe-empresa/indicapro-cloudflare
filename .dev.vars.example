@@ -1,0 +1,5 @@
+# Copie para .dev.vars para desenvolvimento local
+SUPABASE_URL=https://vakqtlfewbeyeqxsdksa.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_gXwdOIOz3RqWLWncOPs9kQ_brOosaMf
+# Somente servidor. Preencha com a chave do seu painel Supabase.
+SUPABASE_SERVICE_ROLE_KEY=
