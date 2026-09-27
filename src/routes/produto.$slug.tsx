@@ -1,6 +1,6 @@
 import { createFileRoute, useSearch, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatBRL } from "@/lib/money";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppName } from "@/hooks/useAppName";
+import { getRef, saveRef } from "@/lib/referral";
 
 
 type Search = { ref?: string | undefined };
@@ -35,6 +36,9 @@ function PublicProduct() {
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
   const appName = useAppName();
+  useEffect(() => {
+    if (ref) saveRef(slug, ref);
+  }, [slug, ref]);
 
   function goBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -80,13 +84,18 @@ function PublicProduct() {
 
   async function buy() {
     if (busy) return;
+    const refCode = ref ?? getRef(slug);
     if (!user) {
       toast.info("Entre ou crie sua conta para finalizar a compra.");
-      void router.navigate({ to: "/auth" });
+      const voltar = `/produto/${slug}${refCode ? `?ref=${encodeURIComponent(refCode)}` : ""}`;
+      void router.navigate({ to: "/auth", search: { redirect: voltar } });
       return;
     }
     setBusy(true);
-    const { data, error } = await supabase.rpc("create_purchase_intent", { _slug: slug, ...(ref ? { _ref: ref } : {}) });
+    const { data, error } = await supabase.rpc("create_purchase_intent", {
+      _slug: slug,
+      ...(refCode ? { _ref: refCode } : {}),
+    });
     setBusy(false);
     const row = Array.isArray(data) ? data[0] : data;
     if (error || !row) {

@@ -5,13 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { traduzErro } from "@/lib/authErrors";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppName } from "@/hooks/useAppName";
+import { safeRedirect } from "@/lib/referral";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+type AuthSearch = { redirect?: string };
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): AuthSearch => ({
+    redirect: typeof search["redirect"] === "string" ? search["redirect"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Entrar — IndicaPro" },
@@ -27,13 +33,15 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const appName = useAppName();
+  const { redirect } = Route.useSearch();
+  const destino = safeRedirect(redirect);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup" | "recover">("signin");
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/", replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) navigate({ href: destino, replace: true });
+  }, [user, loading, navigate, destino]);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -49,7 +57,7 @@ function AuthPage() {
     setBusy(false);
     if (error) { toast.error(traduzErro(error, "Não foi possível entrar. Verifique seu e-mail e senha.")); return; }
     toast.success("Bem-vindo de volta!");
-    navigate({ to: "/", replace: true });
+    navigate({ href: destino, replace: true });
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -61,7 +69,7 @@ function AuthPage() {
       email: form.email.trim(),
       password: form.password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}${destino}`,
         data: { name: form.name.trim(), phone: form.phone.trim() },
       },
     });
@@ -72,7 +80,7 @@ function AuthPage() {
       setMode("signin");
       return;
     }
-    navigate({ to: "/", replace: true });
+    navigate({ href: destino, replace: true });
   }
 
   async function handleRecover(e: React.FormEvent) {
