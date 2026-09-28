@@ -100,7 +100,7 @@ function AuthPage() {
     <div className="flex min-h-screen w-full items-center justify-center overflow-x-hidden px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-extrabold tracking-tight text-primary">{appName}</h1>
+          <Link to="/" className="text-2xl font-extrabold tracking-tight text-primary">{appName}</Link>
           <p className="mt-1 text-sm text-muted-foreground">
             Indique produtos e receba comissões via PIX.
           </p>

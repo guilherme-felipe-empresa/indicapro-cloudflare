@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ArrowLeft, MessageCircle } from "lucide-react";
@@ -69,7 +69,7 @@ function PublicProduct() {
           <ArrowLeft className="size-5" />
           <span className="hidden sm:inline">Voltar</span>
         </Button>
-        <span className="flex-1 text-center text-base font-bold text-primary">{appName}</span>
+        <Link to="/" className="flex-1 text-center text-base font-bold text-primary">{appName}</Link>
         <span className="w-10 sm:w-20" aria-hidden="true" />
       </div>
     </header>
