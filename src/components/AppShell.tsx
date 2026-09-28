@@ -49,9 +49,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex w-full max-w-6xl">
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border p-4 md:flex">
-          <div className="mb-8 px-2 text-lg font-bold tracking-tight text-primary">
+          <Link to="/" className="mb-8 px-2 text-lg font-bold tracking-tight text-primary">
             {appName}
-          </div>
+          </Link>
           <nav className="flex flex-col gap-1">
             {navItems.map((item) => (
               <Link
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <main className="min-w-0 flex-1 pb-24 md:pb-10">
           <header className="flex items-center justify-between px-4 py-4 md:hidden">
-            <span className="text-base font-bold text-primary">{appName}</span>
+            <Link to="/" className="text-base font-bold text-primary">{appName}</Link>
             {isAdmin && (
               <Link
                 to="/admin"

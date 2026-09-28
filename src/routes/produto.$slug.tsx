@@ -41,11 +41,19 @@ function PublicProduct() {
   }, [slug, ref]);
 
   function goBack() {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.history.back();
-    } else {
-      void router.navigate({ to: "/" });
+    if (typeof window !== "undefined") {
+      const referrer = document.referrer;
+      const cameFromApp =
+        referrer !== "" &&
+        new URL(referrer, window.location.href).origin === window.location.origin;
+
+      if (cameFromApp && window.history.length > 1) {
+        router.history.back();
+        return;
+      }
     }
+
+    void router.navigate({ to: "/" });
   }
 
   const backBar = (
