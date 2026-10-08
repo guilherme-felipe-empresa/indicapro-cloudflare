@@ -89,6 +89,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          in_stock: boolean
           category: string
           commission_type: Database["public"]["Enums"]["commission_type"]
           commission_value: number
@@ -103,6 +104,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          in_stock?: boolean
           category?: string
           commission_type?: Database["public"]["Enums"]["commission_type"]
           commission_value: number
