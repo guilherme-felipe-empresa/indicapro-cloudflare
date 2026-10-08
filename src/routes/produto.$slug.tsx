@@ -85,6 +85,22 @@ function PublicProduct() {
         .eq("slug", slug)
         .eq("active", true)
         .maybeSingle();
+
+      if (
+        error &&
+        error.message?.toLowerCase().includes("in_stock") &&
+        error.message?.toLowerCase().includes("schema cache")
+      ) {
+        const fallback = await supabase
+          .from("products")
+          .select("id, slug, name, description, image_url, price_cents, active")
+          .eq("slug", slug)
+          .eq("active", true)
+          .maybeSingle();
+        if (fallback.error) throw fallback.error;
+        return fallback.data ? { ...fallback.data, in_stock: true } : null;
+      }
+
       if (error) throw error;
       return data;
     },
