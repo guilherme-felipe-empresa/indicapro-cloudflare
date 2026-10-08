@@ -18,6 +18,7 @@ export type Product = {
   commission_type: CommissionType;
   commission_value: number;
   active: boolean;
+  in_stock: boolean;
   category?: string | null;
 };
 
@@ -39,6 +40,7 @@ export function ProductCard({ product }: { product: Product }) {
       requireLogin("comprar este produto");
     }
   }
+
   const commission = commissionCents(
     product.price_cents,
     product.commission_type,
@@ -92,7 +94,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="surface-card flex flex-col overflow-hidden shadow-sm">
-      <div className="aspect-square w-full bg-muted">
+      <div className="relative aspect-square w-full bg-muted">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -101,6 +103,13 @@ export function ProductCard({ product }: { product: Product }) {
             className="size-full object-cover"
           />
         ) : null}
+        {!product.in_stock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/55">
+            <Badge variant="secondary" className="px-4 py-2 text-sm font-bold shadow-sm">
+              Esgotado
+            </Badge>
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         {product.category ? (
@@ -118,11 +127,17 @@ export function ProductCard({ product }: { product: Product }) {
           Ganhe {formatBRL(commission)} indicando
         </Badge>
         <div className="mt-auto flex flex-col gap-2 pt-3">
-          <Button asChild variant="outline" className="h-11">
-            <Link to="/produto/$slug" params={{ slug: product.slug }} onClick={handleBuy}>
-              <ShoppingBag className="size-4" /> Comprar
-            </Link>
-          </Button>
+          {product.in_stock ? (
+            <Button asChild variant="outline" className="h-11">
+              <Link to="/produto/$slug" params={{ slug: product.slug }} onClick={handleBuy}>
+                <ShoppingBag className="size-4" /> Comprar
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" className="h-11" disabled>
+              <ShoppingBag className="size-4" /> Esgotado
+            </Button>
+          )}
           <div className="flex gap-2">
             <Button className="h-11 flex-1" onClick={share} disabled={busy}>
               <Share2 className="size-4" /> Divulgar
