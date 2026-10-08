@@ -254,9 +254,19 @@ function AdminProducts() {
         toast.error("Não foi possível excluir o produto.");
       }
     } else {
-      const prefix = "/api/public/product-image/";
-      if (typeof data === "string" && data.startsWith(prefix)) {
-        await supabase.storage.from("product-images").remove([data.slice(prefix.length)]);
+      if (typeof data === "string") {
+        const legacyPrefix = "/api/public/product-image/";
+        const publicPrefix = "https://vakqtlfewbeyeqxsdksa.supabase.co/storage/v1/object/public/product-images/";
+
+        const storagePath = data.startsWith(legacyPrefix)
+          ? data.slice(legacyPrefix.length)
+          : data.startsWith(publicPrefix)
+            ? data.slice(publicPrefix.length)
+            : null;
+
+        if (storagePath) {
+          await supabase.storage.from("product-images").remove([storagePath]);
+        }
       }
       toast.success("Produto excluído.");
     }
