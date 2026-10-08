@@ -57,6 +57,7 @@ type FormState = {
   commission_type: CommissionType;
   commission: string;
   active: boolean;
+  in_stock: boolean;
 };
 
 const EMPTY: FormState = {
@@ -68,6 +69,7 @@ const EMPTY: FormState = {
   commission_type: "fixed",
   commission: "",
   active: true,
+  in_stock: true,
 };
 
 const CATEGORIAS_SUGERIDAS = [
@@ -164,6 +166,7 @@ function AdminProducts() {
           ? (p.commission_value / 100).toFixed(2).replace(".", ",")
           : (p.commission_value / 100).toString().replace(".", ","),
       active: p.active,
+      in_stock: p.in_stock,
     });
     setOpen(true);
   }
@@ -190,6 +193,7 @@ function AdminProducts() {
       commission_type: form.commission_type,
       commission_value,
       active: form.active,
+      in_stock: form.in_stock,
     };
     const { error } = editing
       ? await supabase.from("products").update(payload).eq("id", editing.id)
@@ -362,6 +366,10 @@ function AdminProducts() {
               <Label htmlFor="p-active">Produto ativo</Label>
               <Switch id="p-active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="p-stock">Produto disponível em estoque</Label>
+              <Switch id="p-stock" checked={form.in_stock} onCheckedChange={(v) => setForm({ ...form, in_stock: v })} />
+            </div>
             <Button type="submit" className="h-12 w-full" disabled={busy}>
               {busy ? "Salvando..." : "Salvar"}
             </Button>
@@ -385,7 +393,10 @@ function AdminProducts() {
                     {p.category}
                   </p>
                 ) : null}
-                <p className="text-sm font-semibold">{formatBRL(p.price_cents)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold">{formatBRL(p.price_cents)}</p>
+                  {!p.in_stock && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Esgotado</span>}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Comissão:{" "}
                   {p.commission_type === "fixed"
