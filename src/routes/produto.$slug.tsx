@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/money";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppName } from "@/hooks/useAppName";
 import { getRef, saveRef } from "@/lib/referral";
-
 
 type Search = { ref?: string | undefined };
 
@@ -36,6 +36,7 @@ function PublicProduct() {
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
   const appName = useAppName();
+
   useEffect(() => {
     if (ref) saveRef(slug, ref);
   }, [slug, ref]);
@@ -75,13 +76,12 @@ function PublicProduct() {
     </header>
   );
 
-
   const product = useQuery({
     queryKey: ["public-product", slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, slug, name, description, image_url, price_cents, active")
+        .select("id, slug, name, description, image_url, price_cents, active, in_stock")
         .eq("slug", slug)
         .eq("active", true)
         .maybeSingle();
@@ -91,7 +91,7 @@ function PublicProduct() {
   });
 
   async function buy() {
-    if (busy) return;
+    if (busy || !p.in_stock) return;
     const refCode = ref ?? getRef(slug);
     if (!user) {
       toast.info("Entre ou crie sua conta para finalizar a compra.");
@@ -107,7 +107,7 @@ function PublicProduct() {
     setBusy(false);
     const row = Array.isArray(data) ? data[0] : data;
     if (error || !row) {
-      toast.error("Não foi possível iniciar a compra. Tente novamente.");
+      toast.error(error?.message?.includes("esgotado") ? "Este produto está esgotado." : "Não foi possível iniciar a compra. Tente novamente.");
       return;
     }
     const { data: me } = await supabase
@@ -158,29 +158,38 @@ function PublicProduct() {
     <div className="min-h-screen w-full overflow-x-hidden pb-28">
       {backBar}
       <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="surface-card aspect-square overflow-hidden bg-muted">
+          <div className="relative surface-card aspect-square overflow-hidden bg-muted">
             {p.image_url && (
               <img src={p.image_url} alt={p.name} className="size-full object-cover" />
             )}
+            {!p.in_stock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/55">
+                <Badge variant="secondary" className="px-4 py-2 text-sm font-bold shadow-sm">
+                  Esgotado
+                </Badge>
+              </div>
+            )}
           </div>
           <div className="space-y-3">
-            <h1 className="text-2xl font-extrabold tracking-tight">{p.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-extrabold tracking-tight">{p.name}</h1>
+              {!p.in_stock && <Badge variant="secondary">Esgotado</Badge>}
+            </div>
             <p className="text-3xl font-extrabold text-primary">{formatBRL(p.price_cents)}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">{p.description}</p>
-            <Button onClick={buy} disabled={busy} className="hidden h-12 w-full md:flex">
+            <Button onClick={buy} disabled={busy || !p.in_stock} className="hidden h-12 w-full md:flex">
               <MessageCircle className="size-4" />
-              {busy ? "Abrindo WhatsApp..." : "Comprar pelo WhatsApp"}
+              {!p.in_stock ? "Esgotado" : busy ? "Abrindo WhatsApp..." : "Comprar pelo WhatsApp"}
             </Button>
           </div>
         </div>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 p-4 backdrop-blur md:hidden">
-        <Button onClick={buy} disabled={busy} className="h-13 w-full py-3.5 text-base">
+        <Button onClick={buy} disabled={busy || !p.in_stock} className="h-13 w-full py-3.5 text-base">
           <MessageCircle className="size-5" />
-          {busy ? "Abrindo WhatsApp..." : "Comprar pelo WhatsApp"}
+          {!p.in_stock ? "Esgotado" : busy ? "Abrindo WhatsApp..." : "Comprar pelo WhatsApp"}
         </Button>
       </div>
     </div>
