@@ -166,7 +166,7 @@ function AdminProducts() {
           ? (p.commission_value / 100).toFixed(2).replace(".", ",")
           : (p.commission_value / 100).toString().replace(".", ","),
       active: p.active,
-      in_stock: p.in_stock,
+      in_stock: p.in_stock !== false,
     });
     setOpen(true);
   }
@@ -195,14 +195,37 @@ function AdminProducts() {
       active: form.active,
       in_stock: form.in_stock,
     };
-    const { error } = editing
+    let result = editing
       ? await supabase.from("products").update(payload).eq("id", editing.id)
       : await supabase
           .from("products")
           .insert({ ...payload, slug: `${slugify(form.name)}-${Date.now().toString(36).slice(-4)}` });
+
+    let error = result.error;
+    let stockColumnMissing =
+      error?.message?.toLowerCase().includes("in_stock") &&
+      error?.message?.toLowerCase().includes("schema cache");
+
+    if (stockColumnMissing) {
+      const { in_stock: _inStock, ...legacyPayload } = payload;
+      result = editing
+        ? await supabase.from("products").update(legacyPayload).eq("id", editing.id)
+        : await supabase
+            .from("products")
+            .insert({
+              ...legacyPayload,
+              slug: `${slugify(form.name)}-${Date.now().toString(36).slice(-4)}`,
+            });
+      error = result.error;
+    }
+
     setBusy(false);
     if (error) { toast.error("Não foi possível salvar o produto."); return; }
-    toast.success(editing ? "Produto atualizado!" : "Produto cadastrado!");
+    if (stockColumnMissing) {
+      toast.warning("Produto salvo, mas o controle de estoque ainda não está ativo no banco.");
+    } else {
+      toast.success(editing ? "Produto atualizado!" : "Produto cadastrado!");
+    }
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["admin-products"] });
     qc.invalidateQueries({ queryKey: ["products"] });
@@ -395,7 +418,7 @@ function AdminProducts() {
                 ) : null}
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold">{formatBRL(p.price_cents)}</p>
-                  {!p.in_stock && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Esgotado</span>}
+                  {p.in_stock === false && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Esgotado</span>}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Comissão:{" "}
