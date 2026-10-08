@@ -103,7 +103,7 @@ export function ProductCard({ product }: { product: Product }) {
             className="size-full object-cover"
           />
         ) : null}
-        {!product.in_stock && (
+        {product.in_stock === false && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/55">
             <Badge variant="secondary" className="px-4 py-2 text-sm font-bold shadow-sm">
               Esgotado
@@ -127,7 +127,7 @@ export function ProductCard({ product }: { product: Product }) {
           Ganhe {formatBRL(commission)} indicando
         </Badge>
         <div className="mt-auto flex flex-col gap-2 pt-3">
-          {product.in_stock ? (
+          {product.in_stock !== false ? (
             <Button asChild variant="outline" className="h-11">
               <Link to="/produto/$slug" params={{ slug: product.slug }} onClick={handleBuy}>
                 <ShoppingBag className="size-4" /> Comprar
