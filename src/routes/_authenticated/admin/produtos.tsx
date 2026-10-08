@@ -123,7 +123,7 @@ function AdminProducts() {
       toast.error("Não foi possível enviar a foto.");
       return;
     }
-    setForm((f) => ({ ...f, image_url: `/api/public/product-image/${path}` }));
+    const { data: publicUrlData } = supabase.storage.from("product-images").getPublicUrl(path);\n    setForm((f) => ({ ...f, image_url: publicUrlData.publicUrl }));
     toast.success("Foto enviada!");
   }
 
